@@ -114,9 +114,13 @@ class FeedManager {
     this.feed.updateHxLength(items);
     this.sortItemsByDate(data);
     this.identifyNewItems(data);
-    this.populateNewItemsInFeed(data, firstload);
+
+    const innerFirst = !firstload && this.feed.failedFirstLoad;
+
+    this.populateNewItemsInFeed(data, innerFirst);
     if (firstload && !this.instance.skipFirstLoad) {
       this.instance.emit(`initial-load:${this.feed.url}`, { url: this.feed.url, items: this.feed.items });
+      this.feed.failedFirstLoad = false;
     }
   }
 }

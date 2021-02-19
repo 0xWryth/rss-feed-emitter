@@ -91,6 +91,12 @@ class Feed {
      */
     this.maxHistoryLength; // eslint-disable-line no-unused-expressions
 
+    /**
+     * Track first load failing so skipFirstLoad can be honored on the first passing load
+     * @type {Boolean}
+     */
+    this.failedFirstLoad = true;
+
     ({
       items: this.items, url: this.url, refresh: this.refresh, userAgent: this.userAgent,
       eventName: this.eventName,
