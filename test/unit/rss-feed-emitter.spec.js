@@ -15,7 +15,9 @@ const { expect } = chai;
 let feeder;
 const defaultUserAgent = 'Node/RssFeedEmitter (https://github.com/filipedeschamps/rss-feed-emitter)';
 
-describe('RssFeedEmitter (unit)', () => {
+describe('RssFeedEmitter (unit)', function unit() {
+  this.retries(4);
+
   beforeEach(() => {
     feeder = new RssFeedEmitter();
   });
