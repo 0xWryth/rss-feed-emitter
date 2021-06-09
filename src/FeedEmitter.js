@@ -57,14 +57,12 @@ class FeedEmitter extends EventEmitter {
    * @param       {Object} feed to validate
    * @param       {string} ua User Agent string to pass to feeds
    */
-  static #validateFeedObject (feed, ua) {
+  static validateFeedObject(feed, ua) {
     checkFeed(feed);
     checkUrl(feed);
     checkRefresh(feed);
     feed.userAgent = feed.userAgent || ua || DEFAULT_UA;
   }
-
-  #emittedUrlsPerEvent;
 
   /**
    * The constructor special method is called everytime
@@ -103,7 +101,7 @@ class FeedEmitter extends EventEmitter {
      * Each entry set clears at the same interval as the most recently applied feed.
      * @type {Object}
      */
-    this.#emittedUrlsPerEvent = {};
+    this.emittedUrlsPerEvent = {};
   }
 
   /**
@@ -133,7 +131,7 @@ class FeedEmitter extends EventEmitter {
 
     const config = userFeedConfig[0];
 
-    FeedEmitter.#validateFeedObject(config, this.userAgent);
+    FeedEmitter.validateFeedObject(config, this.userAgent);
 
     if (Array.isArray(config.url)) {
       config.url.forEach((url) => {
@@ -147,7 +145,7 @@ class FeedEmitter extends EventEmitter {
 
     const feed = new Feed(config);
 
-    this.#addOrUpdateFeedList(feed);
+    this.addOrUpdateFeedList(feed);
 
     return this.feedList;
   }
@@ -165,11 +163,11 @@ class FeedEmitter extends EventEmitter {
       throw new FeedError('You must call #remove with a string containing the feed url', 'type_error');
     }
 
-    const feed = this.#findFeed({
+    const feed = this.findFeed({
       url,
     });
 
-    return this.#removeFromFeedList(feed);
+    return this.removeFromFeedList(feed);
   }
 
   /**
@@ -196,21 +194,21 @@ class FeedEmitter extends EventEmitter {
    * @private
    * @param {Feed} feed feed to be removed if it's present or added if it's not
    */
-  #addOrUpdateFeedList (feed) {
-    const feedInList = this.#findFeed(feed);
+  addOrUpdateFeedList(feed) {
+    const feedInList = this.findFeed(feed);
     if (feedInList) {
-      this.#removeFromFeedList(feedInList);
+      this.removeFromFeedList(feedInList);
     }
 
-    if (!this.#emittedUrlsPerEvent[feed.eventName]) {
-      this.#emittedUrlsPerEvent[feed.eventName] = {
+    if (!this.emittedUrlsPerEvent[feed.eventName]) {
+      this.emittedUrlsPerEvent[feed.eventName] = {
         timeout: setTimeout(() => {
-          this.#emittedUrlsPerEvent[feed.eventName].urls = [];
+          this.emittedUrlsPerEvent[feed.eventName].urls = [];
         }, feed.refresh),
         urls: [],
       };
     }
-    this.#addToFeedList(feed);
+    this.addToFeedList(feed);
   }
 
   /**
@@ -219,7 +217,7 @@ class FeedEmitter extends EventEmitter {
    * @param  {UserFeedConfig} feed Feed to look up
    * @returns {Feed | null}
    */
-  #findFeed (feed) {
+  findFeed(feed) {
     return this.feedList.find((feedEntry) => feedEntry.url === feed.url);
   }
 
@@ -231,9 +229,9 @@ class FeedEmitter extends EventEmitter {
    * @private
    * @param {Feed} feed feed to be added
    */
-  #addToFeedList (feed) {
+  addToFeedList(feed) {
     feed.items = [];
-    feed.interval = this.#createSetInterval(feed);
+    feed.interval = this.createSetInterval(feed);
 
     this.feedList.push(feed);
   }
@@ -244,7 +242,7 @@ class FeedEmitter extends EventEmitter {
    * @param  {Object} feed Feed to be removed
    * @returns {Interval}      interval for updating the feed
    */
-  #createSetInterval (feed) {
+  createSetInterval(feed) {
     const feedManager = new FeedManager(this, feed);
     feedManager.getContent(true);
 
@@ -258,7 +256,7 @@ class FeedEmitter extends EventEmitter {
    * @private
    * @param  {Feed} feed feed to be removed
    */
-  #removeFromFeedList (feed) {
+  removeFromFeedList(feed) {
     if (!feed) return;
 
     feed.destroy();
@@ -277,14 +275,14 @@ class FeedEmitter extends EventEmitter {
    */
   emit(event, data) {
     // should only get triggered by initial-load, which we don't want to muck up memory with
-    if (!this.#emittedUrlsPerEvent[event]) {
+    if (!this.emittedUrlsPerEvent[event]) {
       return super.emit(event, data);
     }
 
-    if (this.#emittedUrlsPerEvent[event].urls.includes(data.link)) {
+    if (this.emittedUrlsPerEvent[event].urls.includes(data.link)) {
       return false;
     }
-    this.#emittedUrlsPerEvent[event].urls.push(data.link);
+    this.emittedUrlsPerEvent[event].urls.push(data.link);
     return super.emit(event, data);
   }
 }

@@ -84,7 +84,7 @@ class FeedManager {
   populateNewItemsInFeed(data, firstload) {
     data.newItems.forEach((item) => {
       this.feed.addItem(item);
-      if (!(firstload && this.instance.skipFirstLoad)) {
+      if ((firstload && !this.instance.skipFirstLoad) || !firstload) {
         this.instance.emit(this.feed.eventName, item);
       }
     });
@@ -96,6 +96,7 @@ class FeedManager {
    * @param  {FeedError} error handle error
    */
   onError(error) {
+    console.error(error.stack);
     this.instance.emit('error', error);
   }
 
@@ -115,7 +116,7 @@ class FeedManager {
     this.sortItemsByDate(data);
     this.identifyNewItems(data);
 
-    const innerFirst = !firstload && this.feed.failedFirstLoad;
+    const innerFirst = firstload || (!firstload && this.feed.failedFirstLoad);
 
     this.populateNewItemsInFeed(data, innerFirst);
     if (firstload && !this.instance.skipFirstLoad) {
